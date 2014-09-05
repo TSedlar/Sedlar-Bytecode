@@ -180,6 +180,13 @@ public abstract class AbstractInstruction {
 		out.writeByte(opcode.id());
 	}
 
+	/**
+	 * Gets the next instruction matching the given filter within reach of the given radius
+	 * 
+	 * @param filter the filter to match
+	 * @param radius the maximum distance to search
+	 * @return the next instruction matching the given filter within reach of the given radius
+	 */
 	public AbstractInstruction next(Filter<AbstractInstruction> filter, int radius) {
 		int iterated = 0;
 		AbstractInstruction ai = this;
@@ -190,7 +197,40 @@ public abstract class AbstractInstruction {
 		return null;
 	}
 
+	/**
+	 * Gets the next instruction matching the given filter
+	 * 
+	 * @param filter the filter to mtach
+	 * @return the next instruction matching the given filter
+	 */
 	public AbstractInstruction next(Filter<AbstractInstruction> filter) {
 		return next(filter, -1);
+	}
+	
+	/**
+	 * Gets the previous instruction matching the given filter within reach of the given radius
+	 * 
+	 * @param filter the filter to match
+	 * @param radius the maximum distance to search
+	 * @return the previous instruction matching the given filter within reach of the given radius
+	 */
+	public AbstractInstruction previous(Filter<AbstractInstruction> filter, int radius) {
+		int iterated = 0;
+		AbstractInstruction ai = this;
+		while ((ai = ai.previous()) != null && (radius == -1 || iterated++ < radius)) {
+			if (filter.accept(ai))
+				return ai;
+		}
+		return null;
+	}
+	
+	/**
+	 * Gets the previous instruction matching the given filter
+	 * 
+	 * @param filter the filter to match
+	 * @return the previous instruction matching the given filter
+	 */
+	public AbstractInstruction previous(Filter<AbstractInstruction> filter) {
+		return previous(filter, -1);
 	}
 }
