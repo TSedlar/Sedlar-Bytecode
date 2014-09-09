@@ -22,6 +22,7 @@ import me.sedlar.bytecode.structure.attributes.CodeAttribute;
 import me.sedlar.bytecode.structure.flow.BasicBlock;
 import me.sedlar.bytecode.structure.flow.BlockType;
 import me.sedlar.bytecode.structure.flow.graph.FlowGraph;
+import me.sedlar.bytecode.transform.TransformableBlock;
 import me.sedlar.bytecode.tree.NodeTree;
 import me.sedlar.bytecode.tree.util.TreeBuilder;
 import me.sedlar.bytecode.util.QueryableInstructionList;
@@ -215,5 +216,14 @@ public class MethodInfo extends ClassMember {
 			}
 		}
 		return blocks;
+	}
+	
+	/**
+	 * Accepts a TransformableBlock
+	 * 
+	 * @param transform the transform to accept
+	 */
+	public void accept(TransformableBlock transform) {
+		blocks().forEach(bb -> transform.transform(bb));
 	}
 }
