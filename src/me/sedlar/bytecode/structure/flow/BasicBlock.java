@@ -19,6 +19,7 @@ import me.sedlar.bytecode.util.Assembly;
 import me.sedlar.bytecode.util.QueryableInstructionList;
 import me.sedlar.bytecode.util.filter.InstructionFilter;
 import me.sedlar.util.Filter;
+import me.sedlar.util.MeasurableInteger;
 
 /**
  * @author <a href="mailto:t@sedlar.me">Tyler Sedlar</a>
@@ -171,5 +172,9 @@ public class BasicBlock {
 
 	public MethodInfo method() {
 		return method;
+	}
+	
+	public MeasurableInteger weight() {
+		return new MeasurableInteger(instructions().size() * predecessors.size());
 	}
 }
