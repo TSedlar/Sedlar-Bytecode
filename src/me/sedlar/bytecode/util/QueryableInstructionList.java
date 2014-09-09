@@ -21,6 +21,15 @@ import me.sedlar.util.collection.QueryableList;
 public class QueryableInstructionList extends QueryableList<AbstractInstruction> {
 
 	protected final Map<String, AbstractInstruction> cache = new HashMap<>();
+	
+	@Override
+	public AbstractInstruction set(int index, AbstractInstruction ai) {
+		AbstractInstruction old = get(index);
+		ai.setNext(old.next());
+		ai.setPrevious(old.previous());
+		ai.setOffset(old.offset());
+		return super.set(index, ai);
+	}
 
 	/**
 	 * Locates instructions matching each filter in order.
