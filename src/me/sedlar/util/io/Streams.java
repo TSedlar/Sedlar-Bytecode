@@ -70,4 +70,30 @@ public class Streams {
 		}
 		return output;
 	}
+	
+	/**
+     * Converts the given class to a byte[]
+     *
+     * @param clazz The class to convert
+     * @return the byte[] of the given class
+     */
+    public static byte[] binaryClass(String clazz) {
+        try {
+            String path = clazz.replace('.', '/') + ".class";
+            return binary(ClassLoader.getSystemResourceAsStream(path));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new byte[0];
+        }
+    }
+
+    /**
+     * Converts the given class to a byte[]
+     *
+     * @param clazz The class to convert
+     * @return the byte[] of the given class
+     */
+    public static byte[] binaryClass(Class<?> clazz) {
+        return binaryClass(clazz.getCanonicalName());
+    }
 }
