@@ -6,7 +6,11 @@
  */
 package me.sedlar.bytecode.tree.util;
 
-import java.util.ArrayList;
+import static me.sedlar.bytecode.Opcode.ATHROW;
+import static me.sedlar.bytecode.Opcode.INVOKEDYNAMIC;
+import static me.sedlar.bytecode.Opcode.INVOKESTATIC;
+import static me.sedlar.bytecode.Opcode.MONITOREXIT;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,7 +20,6 @@ import me.sedlar.bytecode.structure.flow.BasicBlock;
 import me.sedlar.bytecode.tree.NodeTree;
 import me.sedlar.bytecode.tree.node.*;
 import me.sedlar.bytecode.util.Assembly;
-import static me.sedlar.bytecode.Opcode.*;
 
 /**
  * @author <a href="mailto:t@sedlar.me">Tyler Sedlar</a>
