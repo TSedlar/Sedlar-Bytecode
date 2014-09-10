@@ -7,6 +7,7 @@
 package me.sedlar.bytecode.tree.util;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import me.sedlar.bytecode.*;
@@ -171,6 +172,26 @@ public class TreeBuilder {
 	}
 
 	/**
+	 * Gets the NodeTree for the list of given instructions.
+	 * 
+	 * @param instructions
+	 *            the instructions to construct a NodeTree for.
+	 * @return the NodeTree for the given instructions.
+	 */
+	public static NodeTree build(List<AbstractInstruction> instructions) {
+		if (instructions.isEmpty())
+			return null;
+		NodeTree tree = new NodeTree(instructions.get(0).methodInfo());
+		List<AbstractNode> nodes = new LinkedList<>();
+		instructions.forEach(ai -> nodes.add(createNode(ai, tree, getTreeSize(ai))));
+		treeIndex = nodes.size() - 1;
+		AbstractNode node;
+		while ((node = iterate(nodes)) != null)
+			tree.addFirst(node);
+		return tree;
+	}
+
+	/**
 	 * Gets the NodeTree for the given method.
 	 *
 	 * @param method
@@ -178,15 +199,7 @@ public class TreeBuilder {
 	 * @return the NodeTree for the given method.
 	 */
 	public static NodeTree build(MethodInfo method) {
-		NodeTree tree = new NodeTree(method);
-		List<AbstractNode> nodes = new ArrayList<>();
-		for (AbstractInstruction ain : method.instructions())
-			nodes.add(createNode(ain, tree, getTreeSize(ain)));
-		treeIndex = nodes.size() - 1;
-		AbstractNode node;
-		while ((node = iterate(nodes)) != null)
-			tree.addFirst(node);
-		return tree;
+		return build(method.instructions());
 	}
 
 	/**
@@ -197,14 +210,6 @@ public class TreeBuilder {
 	 * @return the NodeTree for the given method.
 	 */
 	public static NodeTree build(BasicBlock block) {
-		NodeTree tree = new NodeTree(block.method());
-		List<AbstractNode> nodes = new ArrayList<>();
-		for (AbstractInstruction ain : block.instructions())
-			nodes.add(createNode(ain, tree, getTreeSize(ain)));
-		treeIndex = nodes.size() - 1;
-		AbstractNode node;
-		while ((node = iterate(nodes)) != null)
-			tree.addFirst(node);
-		return tree;
+		return build(block.instructions());
 	}
 }
