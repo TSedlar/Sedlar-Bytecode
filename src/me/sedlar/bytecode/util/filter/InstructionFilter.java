@@ -6,13 +6,14 @@
  */
 package me.sedlar.bytecode.util.filter;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import me.sedlar.bytecode.AbstractInstruction;
 import me.sedlar.bytecode.Opcode;
 import me.sedlar.util.Filter;
 import me.sedlar.util.Strings;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:t@sedlar.me">Tyler Sedlar</a>
@@ -23,17 +24,29 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	private int distance = 10;
 	private String label = null;
+	private Opcode opcode;
 
 	public InstructionFilter() {
 		chained.add(this);
 	}
 
 	/**
+	 * Creates a filter with the given opcode
+	 *
+	 * @param opcode the opcode to set
+	 * @return a filter with the given opcode
+	 */
+	public InstructionFilter opcode(Opcode opcode) {
+		this.opcode = opcode;
+		return this;
+	}
+
+	/**
 	 * Creates a filter with the given distance.
-	 * 
+	 *
 	 * @param distance
 	 *            the distance to set.
-	 * @return a filter with the givne distance.
+	 * @return a filter with the given distance.
 	 */
 	public InstructionFilter distance(int distance) {
 		this.distance = distance;
@@ -42,7 +55,7 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	/**
 	 * Checks if the distance is acceptable.
-	 * 
+	 *
 	 * @param distance
 	 *            the distance to check against.
 	 * @return <t>true</t> if the distance is acceptable, otherwise
@@ -64,7 +77,7 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	/**
 	 * Creates a filter matching this and the given filter.
-	 * 
+	 *
 	 * @param filter
 	 *            the filter to match with.
 	 * @return a filter matching this and the given filter.
@@ -76,13 +89,15 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	/**
 	 * Checks if the given instruction is valid against this filter.
-	 * 
+	 *
 	 * @param ai
 	 *            the instruction to check against.
 	 * @return <t>true</t> if the given instruction is valid against this
 	 *         filter, otherwise <t>false</t>.
 	 */
 	public boolean validate(AbstractInstruction ai) {
+		if (opcode != null && ai.opcode() != opcode)
+			return false;
 		for (InstructionFilter filter : chained) {
 			if (filter.accept(ai))
 				return true;
@@ -92,7 +107,7 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	/**
 	 * Creates a filter matching the given opcode.
-	 * 
+	 *
 	 * @param opcode
 	 *            the opcode to check against.
 	 * @return a filter matching the given opcode.
@@ -106,8 +121,21 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 	}
 
 	/**
+	 * Creates a filter matching any instruction
+	 *
+	 * @return a filter matching any instruction
+	 */
+	public static InstructionFilter create() {
+		return new InstructionFilter() {
+			public boolean accept(AbstractInstruction ai) {
+				return true;
+			}
+		};
+	}
+
+	/**
 	 * Gets the label for this filter.
-	 * 
+	 *
 	 * @return the label for this filter.
 	 */
 	public String label() {
@@ -116,7 +144,7 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	/**
 	 * Creates a filter with the given label.
-	 * 
+	 *
 	 * @param label
 	 *            The label
 	 * @return a filter with the given label.
@@ -139,9 +167,8 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	/**
 	 * Creates a filter from the given string.
-	 * 
-	 * @param filter
-	 *            the string to construct the filter from.
+	 *
+	 * @param filter the string to construct the filter from.
 	 * @return a filter from the given string.
 	 */
 	public static InstructionFilter fromString(String filter) {
@@ -157,6 +184,20 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 		for (int i = 0; i < strings.length; i++)
 			objects[i] = common(strings[i]);
 		boolean single = strings.length == 0 || cleaned.isEmpty();
+		Opcode opcode = null;
+		if (!single) {
+			opcode = Opcode.fromName(strings[0]);
+			if (opcode != null) {
+				if (strings.length > 1) {
+					objects = Arrays.copyOfRange(objects, 1, objects.length - 1);
+					strings = Arrays.copyOfRange(strings, 1, strings.length - 1);
+				} else {
+					objects = new Object[] {};
+					strings = new String[] {};
+					single = true;
+				}
+			}
+		}
 		try {
 			InstructionFilter instance;
 			switch (filterType) {
@@ -171,7 +212,7 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 				}
 				case "FIF": {
 					boolean ignoreStatic = true;
-					if (strings[0].equals("STATIC")) {
+					if (strings.length > 0 && strings[0].equals("STATIC")) {
 						ignoreStatic = false;
 						String[] newStrings = new String[strings.length - 1];
 						Object[] newObjects = new Object[objects.length - 1];
@@ -214,11 +255,11 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 					break;
 				}
 				case "IF": {
-					instance = InstructionFilter.create(Opcode.fromName(strings[0]));
+					instance = single ? InstructionFilter.create() : InstructionFilter.create(Opcode.fromName(strings[0]));
 					break;
 				}
 				case "MIF": {
-					boolean regex = strings[0].equals("REGEX");
+					boolean regex = strings.length > 0 && strings[0].equals("REGEX");
 					if (regex) {
 						String[] newStrings = new String[strings.length - 1];
 						Object[] newObjects = new Object[objects.length - 1];
@@ -265,12 +306,12 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 					break;
 				}
 				case "TIF": {
-					boolean regex = strings[0].equals("REGEX");
+					boolean regex = strings.length > 0 && strings[0].equals("REGEX");
 					if (regex)
-						strings = new String[] { strings[1] };
+						strings = new String[]{strings[1]};
 					instance = single ? TypeInstructionFilter.create()
 							: (regex ? TypeInstructionFilter.createRegex(strings[0])
-									: TypeInstructionFilter.create(strings[0]));
+							: TypeInstructionFilter.create(strings[0]));
 					break;
 				}
 				case "VIF": {
@@ -282,6 +323,8 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 					throw new IllegalArgumentException("filter not found");
 				}
 			}
+			if (opcode != null)
+				instance = instance.opcode(opcode);
 			if (label != null)
 				instance = instance.label(label);
 			return instance;
@@ -293,7 +336,7 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 
 	/**
 	 * Creates an array of filters from the given strings.
-	 * 
+	 *
 	 * @param filters
 	 *            the strings to construct an array of filters from.
 	 * @return an array of filters from the given strings.
