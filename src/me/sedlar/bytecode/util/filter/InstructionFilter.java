@@ -188,9 +188,16 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 		if (!single) {
 			opcode = Opcode.fromName(strings[0]);
 			if (opcode != null) {
+				System.out.println("OPCODE FOUND FOR " + opcode.verbose());
 				if (strings.length > 1) {
-					objects = Arrays.copyOfRange(objects, 1, objects.length - 1);
-					strings = Arrays.copyOfRange(strings, 1, strings.length - 1);
+					String[] newStrings = new String[strings.length - 1];
+					Object[] newObjects = new Object[objects.length - 1];
+					for (int i = 1; i < strings.length; i++) {
+						newStrings[i - 1] = strings[i];
+						newObjects[i - 1] = objects[i];
+					}
+					strings = newStrings;
+					objects = newObjects;
 				} else {
 					objects = new Object[] {};
 					strings = new String[] {};
