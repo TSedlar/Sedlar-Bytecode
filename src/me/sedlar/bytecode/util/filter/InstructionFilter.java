@@ -172,6 +172,11 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 	 * @return a filter from the given string.
 	 */
 	public static InstructionFilter fromString(String filter) {
+		if (filter.contains("GETSTATIC") && !filter.contains(" STATIC")) {
+			filter = filter.replace("GETSTATIC", "GETSTATIC STATIC");
+		} else if (filter.contains("PUTSTATIC") && !filter.contains(" STATIC")) {
+			filter = filter.replace("PUTSTATIC", "PUTSTATIC STATIC");
+		}
 		String label = null;
 		if (filter.contains(" :: ")) {
 			label = filter.split(" :: ")[1];
@@ -188,7 +193,6 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 		if (!single) {
 			opcode = Opcode.fromName(strings[0]);
 			if (opcode != null) {
-				System.out.println("OPCODE FOUND FOR " + opcode.verbose());
 				if (strings.length > 1) {
 					String[] newStrings = new String[strings.length - 1];
 					Object[] newObjects = new Object[objects.length - 1];
