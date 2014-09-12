@@ -13,8 +13,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import me.sedlar.bytecode.AbstractInstruction;
-import me.sedlar.bytecode.BranchInstruction;
+import me.sedlar.bytecode.*;
 import me.sedlar.bytecode.io.BytecodeOutputStream;
 import me.sedlar.bytecode.io.BytecodeReader;
 import me.sedlar.bytecode.io.BytecodeWriter;
@@ -216,6 +215,48 @@ public class MethodInfo extends ClassMember {
 			}
 		}
 		return blocks;
+	}
+
+	/**
+	 * Allows the given InstructionVisitor to be accepted
+	 *
+	 * @param iv the InstructionVisitor to accept
+	 */
+	public void accept(InstructionVisitor iv) {
+		for (AbstractInstruction ai : instructions()) {
+			if (ai instanceof BranchInstruction) {
+				iv.visitBranch((BranchInstruction) ai);
+			} else if (ai instanceof ConstantInstruction) {
+				iv.visitConstant((ConstantInstruction) ai);
+			} else if (ai instanceof FieldInstruction) {
+				iv.visitField((FieldInstruction) ai);
+			} else if (ai instanceof PushInstruction) {
+				iv.visitPush((PushInstruction) ai);
+			} else if (ai instanceof IncrementInstruction) {
+				iv.visitIncrement((IncrementInstruction) ai);
+			} else if (ai instanceof InvokeDynamicInstruction) {
+				iv.visitInvokeDynamic((InvokeDynamicInstruction) ai);
+			} else if (ai instanceof InvokeInterfaceInstruction) {
+				iv.visitInvokeInterface((InvokeInterfaceInstruction) ai);
+			} else if (ai instanceof LookupSwitchInstruction) {
+				iv.visitLookupSwitch((LookupSwitchInstruction) ai);
+			} else if (ai instanceof MethodInstruction) {
+				iv.visitMethod((MethodInstruction) ai);
+			} else if (ai instanceof MultianewarrayInstruction) {
+				iv.visitMultianewarray((MultianewarrayInstruction) ai);
+			} else if (ai instanceof TableSwitchInstruction) {
+				iv.visitTableSwitch((TableSwitchInstruction) ai);
+			} else if (ai instanceof TypeInstruction) {
+				iv.visitType((TypeInstruction) ai);
+			} else if (ai instanceof VariableInstruction) {
+				iv.visitVariable((VariableInstruction) ai);
+			} else if (ai instanceof WideBranchInstruction) {
+				iv.visitWideBranch((WideBranchInstruction) ai);
+			} else {
+				iv.visitInstruction(ai);
+			}
+			iv.visitAny(ai);
+		}
 	}
 	
 	/**
