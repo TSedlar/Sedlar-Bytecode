@@ -316,7 +316,7 @@ public class ClassInfo extends AbstractAttributeStructure {
 	 *
 	 * @return the array
 	 */
-	public String[] interfaces() {
+	public List<String> interfaces() {
 		List<String> list = new LinkedList<>();
 		for (int iface : interfaces) {
 			try {
@@ -324,7 +324,7 @@ public class ClassInfo extends AbstractAttributeStructure {
 			} catch (InvalidByteCodeException ignored) {
 			}
 		}
-		return list.toArray(new String[list.size()]);
+		return list;
 	}
 
 	/**
