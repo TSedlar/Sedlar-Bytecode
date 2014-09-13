@@ -15,7 +15,7 @@ public class CyclomaticComplexity {
 
 	private ComplexityType type = ComplexityType.LINEAR;
 
-	private enum ComplexityType {
+	public enum ComplexityType {
 		STANDARD {
 			public int evaluate(int edges, int nodes, int connections) {
 				return edges - nodes + (connections * 2);

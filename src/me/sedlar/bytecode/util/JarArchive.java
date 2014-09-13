@@ -6,6 +6,11 @@
  */
 package me.sedlar.bytecode.util;
 
+import me.sedlar.bytecode.structure.ClassInfo;
+import me.sedlar.bytecode.structure.InvalidByteCodeException;
+import me.sedlar.bytecode.structure.MethodInfo;
+import me.sedlar.util.io.Streams;
+
 import java.io.*;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -15,11 +20,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
-import me.sedlar.bytecode.structure.ClassInfo;
-import me.sedlar.bytecode.structure.InvalidByteCodeException;
-import me.sedlar.bytecode.structure.MethodInfo;
-import me.sedlar.util.io.Streams;
-
 /**
  * @author <a href="mailto:t@sedlar.me">Tyler Sedlar</a>
  */
@@ -27,6 +27,7 @@ public class JarArchive {
 
 	private final File file;
 	private final long size;
+	private final boolean keepResources;
 
 	private final Map<String, ClassInfo> classes = new HashMap<>();
 	private final Map<String, byte[]> resources = new HashMap<>();
@@ -36,19 +37,29 @@ public class JarArchive {
 	/**
 	 * An archive that is used for gathering ClassInfo data.
 	 *
-	 * @param file
-	 *            a jar file on the local system
+	 * @param file          a jar file on the local system
+	 * @param keepResources <t>true</t> to keep files outside of .class, otherwise <t>false</t>
 	 */
-	public JarArchive(File file) {
+	public JarArchive(File file, boolean keepResources) {
 		if (!file.getName().endsWith(".jar"))
 			throw new IllegalArgumentException("File is not a jar");
 		this.file = file;
 		this.size = file.length();
+		this.keepResources = keepResources;
+	}
+
+	/**
+	 * An archive that is used for gathering ClassInfo data.
+	 *
+	 * @param file a jar file on the local system
+	 */
+	public JarArchive(File file) {
+		this(file, true);
 	}
 
 	/**
 	 * Nanoseconds spent during the build process
-	 * 
+	 *
 	 * @return nanoseconds spent during the build process
 	 */
 	public long nanos() {
@@ -71,10 +82,11 @@ public class JarArchive {
 					JarEntry entry = enumeration.nextElement();
 					String entryName = entry.getName();
 					InputStream stream = jar.getInputStream(entry);
-					byte[] bytes = Streams.binary(stream);
 					if (entryName.endsWith(".class")) {
+						byte[] bytes = Streams.binary(stream);
 						classes.put(entryName.replace(".class", ""), new ClassInfo(bytes));
-					} else {
+					} else if (keepResources) {
+						byte[] bytes = Streams.binary(stream);
 						resources.put(entryName, bytes);
 					}
 				}
@@ -89,7 +101,7 @@ public class JarArchive {
 
 	/**
 	 * Gets the file-size of the given archive.
-	 * 
+	 *
 	 * @return the file-size of the given archive.
 	 */
 	public long size() {
@@ -98,7 +110,7 @@ public class JarArchive {
 
 	/**
 	 * Gets the field count for the archive.
-	 * 
+	 *
 	 * @return the field count for the archive.
 	 */
 	public int fieldCount() {
@@ -110,7 +122,7 @@ public class JarArchive {
 
 	/**
 	 * Gets the method count for the archive.
-	 * 
+	 *
 	 * @return the method count for the archive.
 	 */
 	public int methodCount() {
@@ -122,7 +134,7 @@ public class JarArchive {
 
 	/**
 	 * Gets the block count for the archive.
-	 * 
+	 *
 	 * @return the block count for the archive.
 	 */
 	public int blockCount() {
@@ -136,9 +148,8 @@ public class JarArchive {
 
 	/**
 	 * Dumps the archive to a new file.
-	 * 
-	 * @param file
-	 *            the file to dump to.
+	 *
+	 * @param file the file to dump to.
 	 * @return the file-size of the newly dumped jar.
 	 */
 	public long dump(File file) {
@@ -152,11 +163,13 @@ public class JarArchive {
 				jos.write(bytes, 0, bytes.length);
 				jos.closeEntry();
 			}
-			for (Entry<String, byte[]> entry : resources.entrySet()) {
-				jos.putNextEntry(new JarEntry(entry.getKey()));
-				byte[] bytes = entry.getValue();
-				jos.write(bytes, 0, bytes.length);
-				jos.closeEntry();
+			if (keepResources) {
+				for (Entry<String, byte[]> entry : resources.entrySet()) {
+					jos.putNextEntry(new JarEntry(entry.getKey()));
+					byte[] bytes = entry.getValue();
+					jos.write(bytes, 0, bytes.length);
+					jos.closeEntry();
+				}
 			}
 			jos.flush();
 			return file.length();
