@@ -31,39 +31,56 @@ public class QueryableInstructionList extends QueryableList<AbstractInstruction>
 		return super.set(index, ai);
 	}
 
-	/**
-	 * Locates instructions matching each filter in order.
-	 *
-	 * @param filters
-	 *            The filters to match instructions against
-	 * @return instructions matching each filter in order.
-	 */
-	public QueryableInstructionList find(InstructionFilter... filters) {
-		QueryableInstructionList list = new QueryableInstructionList();
-		Iterator<AbstractInstruction> iterator = iterator();
-		int index = 0, radius = 0;
-		while (iterator.hasNext()) {
-			if (index >= filters.length)
-				break;
-			if (!filters[index].accept(radius)) {
-				index = 0;
-				radius = 0;
-				list.clear();
-				list.cache.clear();
-			}
-			AbstractInstruction ai = iterator.next();
-			radius++;
-			if (filters[index].validate(ai)) {
-				String label = filters[index].label();
-				if (label != null)
-					list.cache.put(label, ai);
-				index++;
-				list.add(ai);
-				radius = 0;
-			}
-		}
-		return list.size() == filters.length ? list : null;
-	}
+    /**
+     * Locates all lists of instructions matching each filter in order.
+     *
+     * @param filters
+     *            The filters to match instructions against
+     * @return list of instructions, each matching each filter in order.
+     */
+    public List<QueryableInstructionList> findAll(InstructionFilter... filters) {
+        List<QueryableInstructionList> res = new ArrayList<>();
+        QueryableInstructionList list = new QueryableInstructionList();
+        Iterator<AbstractInstruction> iterator = iterator();
+        int index = 0, radius = 0;
+        while (iterator.hasNext()) {
+            if (index >= filters.length) {
+                res.add(list);
+                list = new QueryableInstructionList();
+                index = 0;
+                radius = 0;
+            }
+            if (!filters[index].accept(radius)) {
+                index = 0;
+                radius = 0;
+                list.clear();
+                list.cache.clear();
+            }
+            AbstractInstruction ai = iterator.next();
+            radius++;
+            if (filters[index].validate(ai)) {
+                String label = filters[index].label();
+                if (label != null)
+                    list.cache.put(label, ai);
+                index++;
+                list.add(ai);
+                radius = 0;
+            }
+        }
+        return res.size() > 0 ? res : null;
+    }
+
+    /**
+     * Locates instructions matching each filter in order.
+     *
+     * @param filters
+     *            The filters to match instructions against
+     * @return instructions matching each filter in order.
+     */
+    public QueryableInstructionList find(InstructionFilter... filters) {
+        List<QueryableInstructionList> res = this.findAll(filters);
+        return res != null ? res.get(0): null;
+    }
 
 	/**
 	 * Gets the instruction with the given label.
