@@ -69,7 +69,11 @@ public class ConstantInstruction extends AbstractInstruction {
 			} else {
 				if (pool instanceof ConstantIntegerInfo) {
 					return ((ConstantIntegerInfo) pool).value();
-				} else {
+				} else if (pool instanceof ConstantDoubleInfo) {
+					return ((ConstantDoubleInfo) pool).value();
+				}else if (pool instanceof ConstantFloatInfo) {
+					return ((ConstantFloatInfo) pool).value();
+				}else {
 					return ((ConstantLongInfo) pool).value();
 				}
 			}
