@@ -91,6 +91,15 @@ public class QueryableInstructionList extends QueryableList<AbstractInstruction>
 		return cache.get(label);
 	}
 
+    /**
+     * Gets the labeled instructions.
+     *
+     * @return the labeled instructions.
+     */
+    public Map<String, AbstractInstruction> labeled() {
+        return cache;
+    }
+
 	/**
 	 * Prints out the instructions.
 	 * 
