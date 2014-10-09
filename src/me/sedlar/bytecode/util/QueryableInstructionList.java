@@ -6,9 +6,7 @@
  */
 package me.sedlar.bytecode.util;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import me.sedlar.bytecode.AbstractInstruction;
 import me.sedlar.bytecode.structure.MethodInfo;
