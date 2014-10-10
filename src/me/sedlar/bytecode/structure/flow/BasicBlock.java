@@ -167,7 +167,7 @@ public class BasicBlock {
 	@Override
 	public String toString() {
 		String key = method.classInfo().name() + "." + method.name() + method.descriptor();
-		StringBuilder builder = new StringBuilder(key + ": {");
+		StringBuilder builder = new StringBuilder(method.verboseAccessFlags() + " " + key + ": {");
 		for (AbstractInstruction instruction : list)
 			builder.append("\n\t").append(Assembly.toString(instruction));
 		builder.append("\n}");
