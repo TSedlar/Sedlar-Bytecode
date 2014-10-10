@@ -132,6 +132,10 @@ public class BasicBlock {
 		return false;
 	}
 
+    public boolean accept(String filter) {
+        return accept(InstructionFilter.fromString(filter));
+    }
+
 	public int count(String filter) {
 		return count(InstructionFilter.fromString(filter));
 	}
