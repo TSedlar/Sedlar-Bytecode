@@ -10,15 +10,16 @@ import me.sedlar.bytecode.AbstractInstruction;
 import me.sedlar.bytecode.Opcode;
 import me.sedlar.util.Filter;
 import me.sedlar.util.Strings;
+import me.sedlar.util.collection.MultiHashMap;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author <a href="mailto:t@sedlar.me">Tyler Sedlar</a>
  */
 public abstract class InstructionFilter implements Filter<AbstractInstruction> {
+
+    protected final MultiHashMap<String, AbstractInstruction> cache = new MultiHashMap<>();
 
 	private List<InstructionFilter> chained = new LinkedList<>();
 
@@ -30,6 +31,10 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 		chained.add(this);
 	}
 
+    public MultiHashMap<String, AbstractInstruction> cache() {
+        return cache;
+    }
+
 	/**
 	 * Creates a filter with the given opcode
 	 *
@@ -40,6 +45,10 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 		this.opcode = opcode;
 		return this;
 	}
+
+    public Opcode opcode() {
+        return opcode;
+    }
 
 	/**
 	 * Creates a filter with the given distance.
@@ -92,18 +101,35 @@ public abstract class InstructionFilter implements Filter<AbstractInstruction> {
 	 *
 	 * @param ai
 	 *            the instruction to check against.
+     * @param cacheLabels
+     *            <t>true</t> to cache results, otherwise <t>false</t>.
 	 * @return <t>true</t> if the given instruction is valid against this
 	 *         filter, otherwise <t>false</t>.
 	 */
-	public boolean validate(AbstractInstruction ai) {
+	public boolean validate(AbstractInstruction ai, boolean cacheLabels) {
 		if (opcode != null && ai.opcode() != opcode)
 			return false;
 		for (InstructionFilter filter : chained) {
-			if (filter.accept(ai))
-				return true;
+			if (filter.accept(ai)) {
+                if (cacheLabels && filter.label() != null)
+                    cache.add(filter.label(), ai);
+                return true;
+            }
 		}
 		return false;
 	}
+
+    /**
+     * Checks if the given instruction is valid against this filter.
+     *
+     * @param ai
+     *            the instruction to check against.
+     * @return <t>true</t> if the given instruction is valid against this
+     *         filter, otherwise <t>false</t>.
+     */
+    public boolean validate(AbstractInstruction ai) {
+        return validate(ai, false);
+    }
 
 	/**
 	 * Creates a filter matching the given opcode.

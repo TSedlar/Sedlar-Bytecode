@@ -17,6 +17,7 @@ import me.sedlar.bytecode.tree.NodeTree;
 import me.sedlar.bytecode.tree.Tree;
 import me.sedlar.bytecode.tree.node.filter.AbstractNodeFilter;
 import me.sedlar.bytecode.util.Assembly;
+import me.sedlar.util.collection.MultiHashMap;
 import me.sedlar.util.collection.QueryableList;
 
 /**
@@ -98,7 +99,7 @@ public class AbstractNode extends Tree<AbstractNode> {
 		return toString(1);
 	}
 
-	private String toString(int tab) {
+	public String toString(int tab) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(Assembly.toString(insn));
 		for (AbstractNode n : this) {
@@ -808,6 +809,22 @@ public class AbstractNode extends Tree<AbstractNode> {
 		return !children.isEmpty() ? children : null;
 	}
 
+    /**
+     * Gets all the children matching the given filter.
+     *
+     * @param filter
+     *            the filter to match against.
+     * @return all the children matching the given filter.
+     */
+    public List<AbstractNode> findChildren(AbstractNodeFilter filter) {
+        List<AbstractNode> children = new ArrayList<>();
+        for (AbstractNode n : this) {
+            if (filter.validate(n))
+                children.add(n);
+        }
+        return !children.isEmpty() ? children : null;
+    }
+
 	/**
 	 * Gets all the children matching the given opcodes in order.
 	 * 
@@ -851,6 +868,49 @@ public class AbstractNode extends Tree<AbstractNode> {
 		return nodes != null ? nodes.get(0) : null;
 	}
 
+    /**
+     * Gets all the children matching the given filters in order.
+     *
+     * @param filters
+     *            the filters to match in order.
+     * @return all the children matching the given filters in order.
+     */
+    public List<AbstractNode> layerAll(AbstractNodeFilter... filters) {
+        List<AbstractNode> children = findChildren(filters[0]);
+        if (children == null)
+            return null;
+        if (filters.length == 1)
+            return children;
+        for (int i = 1; i < filters.length; i++) {
+            List<AbstractNode> next = new ArrayList<>();
+            for (AbstractNode n : children) {
+                List<AbstractNode> match = n.findChildren(filters[i]);
+                if (match == null)
+                    continue;
+                next.addAll(match);
+            }
+            if (next.isEmpty()) {
+                return null;
+            } else {
+                children.clear();
+                children.addAll(next);
+            }
+        }
+        return children;
+    }
+
+    /**
+     * Gets the children matching the given opcodes in order.
+     *
+     * @param filters
+     *            the filters to match in order.
+     * @return the children matching the given opcodes in order.
+     */
+    public AbstractNode layer(AbstractNodeFilter... filters) {
+        List<AbstractNode> nodes = layerAll(filters);
+        return nodes != null ? nodes.get(0) : null;
+    }
+
 	/**
 	 * Gets the first opcode matching any of the given opcodes.
 	 * 
@@ -866,4 +926,31 @@ public class AbstractNode extends Tree<AbstractNode> {
 		}
 		return null;
 	}
+
+    /**
+     * Maps the found patterns to a MultiHashMap.
+     *
+     * @param patterns the patterns to search for.
+     * @return the found patterns mapped to a MultiHashMap.
+     */
+    public MultiHashMap<String, AbstractNode> map(String... patterns) {
+        MultiHashMap<String, AbstractNode> map = new MultiHashMap<>();
+        for (String pattern : patterns) {
+            AbstractNodeFilter[] filters = AbstractNodeFilter.filtersFor(pattern);
+            List<AbstractNode> results = layerAll(filters);
+            if (results == null)
+                return null;
+            for (AbstractNode node : results) {
+                for (int i = filters.length - 1; i >= 0; i--) {
+                    AbstractNodeFilter filter = filters[i];
+                    if (filter.label() != null) {
+                        filter.cache().add(filter.label(), node);
+                        map.add(filter.label(), node);
+                    }
+                    node = node.parent();
+                }
+            }
+        }
+        return map;
+    }
 }

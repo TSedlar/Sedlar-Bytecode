@@ -83,7 +83,7 @@ public class QueryableList<T> extends LinkedList<T> {
 		QueryableList<T> list = new QueryableList<>();
 		for (int i = index + 1; i < size(); i++) {
 			T t = get(i);
-			if (filter.accept(t))
+            if (filter == null || filter.accept(t))
 				list.add(t);
 		}
 		return list;
