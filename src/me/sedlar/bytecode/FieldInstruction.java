@@ -64,6 +64,19 @@ public class FieldInstruction extends ImmediateShortInstruction {
 	}
 
 	/**
+	 * Set the owner of the field invoke
+	 *
+	 * @param owner the new owner of the field invoke
+	 */
+	public void setOwner(String owner) {
+		try {
+			info().constantClassInfo().setName(owner);
+		} catch (InvalidByteCodeException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
 	 * Get the physical field name being invoked
 	 *
 	 * @return the physical field name being invoked
@@ -77,6 +90,19 @@ public class FieldInstruction extends ImmediateShortInstruction {
 	}
 
 	/**
+	 * Set the physical field name being invoked
+	 *
+	 * @param name the physical field name being invoked
+	 */
+	public void setName(String name) {
+		try {
+			info().nameAndTypeInfo().setName(name);
+		} catch (InvalidByteCodeException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
 	 * Get the physical field name being invoked
 	 *
 	 * @return the physical field name being invoked
@@ -86,6 +112,17 @@ public class FieldInstruction extends ImmediateShortInstruction {
 			return info().nameAndTypeInfo().descriptor();
 		} catch (InvalidByteCodeException e) {
 			return null;
+		}
+	}
+
+	/**
+	 * Set the physical field descriptor being invoked
+	 */
+	public void setDescriptor(String descriptor) {
+		try {
+			info().nameAndTypeInfo().setDescriptor(descriptor);
+		} catch (InvalidByteCodeException e) {
+			e.printStackTrace();
 		}
 	}
 }
