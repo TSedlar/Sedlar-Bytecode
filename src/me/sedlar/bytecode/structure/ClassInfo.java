@@ -857,8 +857,8 @@ public class ClassInfo extends AbstractAttributeStructure {
 		return fieldTypeCount(true);
 	}
 
-    @Override
-    public String toString() {
-        return name;
-    }
+	@Override
+	public String toString() {
+		return name;
+	}
 }
