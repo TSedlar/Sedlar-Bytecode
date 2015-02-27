@@ -190,8 +190,8 @@ public abstract class ClassMember extends AbstractAttributeStructure {
 		writeAttributes(out);
 	}
 
-    @Override
-    public String toString() {
-        return classInfo.toString() + "." + name() + " " + descriptor();
-    }
+	@Override
+	public String toString() {
+		return classInfo.toString() + "." + name() + ":" + descriptor();
+	}
 }
