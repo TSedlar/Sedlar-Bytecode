@@ -64,6 +64,19 @@ public class MethodInstruction extends ImmediateShortInstruction {
 	}
 
 	/**
+	 * Set the owner of the invoke instruction
+	 *
+	 * @param owner the owner of the invoke instruction
+	 */
+	public void setOwner(String owner) {
+		try {
+			info().constantClassInfo().setName(owner);
+		} catch (InvalidByteCodeException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
 	 * Get the physical method name being invoked
 	 *
 	 * @return the physical method name being invoked
@@ -77,6 +90,19 @@ public class MethodInstruction extends ImmediateShortInstruction {
 	}
 
 	/**
+	 * Set the physical method name being invoked
+	 *
+	 * @param name the physical method name being invoked
+	 */
+	public void setName(String name) {
+		try {
+			info().nameAndTypeInfo().setName(name);
+		} catch (InvalidByteCodeException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
 	 * Get the physical method descriptor being invoked
 	 *
 	 * @return the physical method descriptor being invoked
@@ -86,6 +112,19 @@ public class MethodInstruction extends ImmediateShortInstruction {
 			return info().nameAndTypeInfo().descriptor();
 		} catch (InvalidByteCodeException e) {
 			return null;
+		}
+	}
+
+	/**
+	 * Set the physical method descriptor being invoked
+	 *
+	 * @param descriptor the physical method descriptor being invoked
+	 */
+	public void setDescriptor(String descriptor) {
+		try {
+			info().nameAndTypeInfo().setDescriptor(descriptor);
+		} catch (InvalidByteCodeException e) {
+			e.printStackTrace();
 		}
 	}
 }

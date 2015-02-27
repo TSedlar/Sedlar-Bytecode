@@ -7,6 +7,11 @@
 package me.sedlar.bytecode.util;
 
 import me.sedlar.bytecode.*;
+import me.sedlar.bytecode.structure.ClassInfo;
+import me.sedlar.bytecode.structure.FieldInfo;
+import me.sedlar.bytecode.structure.MethodInfo;
+
+import java.util.Collection;
 
 /**
  * @author <a href="mailto:t@sedlar.me">Tyler Sedlar</a>
@@ -160,5 +165,61 @@ public class Assembly {
 				return false;
 			}
 		}
+	}
+
+	/**
+	 * Rename all instances of the FieldInfo to the given name.
+	 *
+	 * @param classes the classes to query.
+	 * @param fi the FieldInfo to rename.
+	 * @param newName the name to rename it to.
+	 */
+	public static void rename(Collection<ClassInfo> classes, FieldInfo fi, String newName) {
+		for (ClassInfo ci : classes) {
+			for (MethodInfo mn : ci.methods()) {
+				mn.instructions().stream().filter(ai -> ai instanceof FieldInstruction).forEach(ai -> {
+					FieldInstruction field = (FieldInstruction) ai;
+					if (field.owner().equals(fi.classInfo().name()) && field.name().equals(fi.name()))
+						field.setName(newName);
+				});
+			}
+		}
+		fi.setName(newName);
+	}
+
+	/**
+	 * Rename all instances of the ClassInfo to the given name.
+	 *
+	 * @param classes the classes to query.
+	 * @param ci the ClassInfo to rename.
+	 * @param newName the name to rename it to.
+	 */
+	public static void rename(Collection<ClassInfo> classes, ClassInfo ci, String newName) {
+		for (ClassInfo classInfo : classes) {
+			if (classInfo.superName().equals(ci.name()))
+				classInfo.setSuperName(newName);
+			if (classInfo.interfaces().contains(ci.name())) {
+				classInfo.interfaces().remove(ci.name());
+				classInfo.interfaces().add(newName);
+			}
+			classInfo.fields().stream().filter(fn -> fn.descriptor().endsWith("L" + ci.name() + ";")).forEach(fn ->
+					fn.setDescriptor(fn.descriptor().replace("L" + ci.name() + ";", "L" + newName + ";")));
+			for (MethodInfo mn : classInfo.methods()) {
+				if (mn.descriptor().contains("L" + ci.name() + ";"))
+					mn.setDescriptor(mn.descriptor().replaceAll("L" + ci.name() + ";", "L" + newName + ";"));
+				for (AbstractInstruction ain : mn.instructions()) {
+					if (ain instanceof FieldInstruction) {
+						FieldInstruction field = (FieldInstruction) ain;
+						if (field.owner().equals(ci.name()))
+							field.setOwner(newName);
+					} else if (ain instanceof MethodInstruction) {
+						MethodInstruction method = (MethodInstruction) ain;
+						if (method.owner().equals(ci.name()))
+							method.setOwner(newName);
+					}
+				}
+			}
+		}
+		ci.setName(newName);
 	}
 }

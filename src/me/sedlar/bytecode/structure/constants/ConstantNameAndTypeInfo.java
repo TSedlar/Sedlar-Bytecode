@@ -95,6 +95,16 @@ public class ConstantNameAndTypeInfo extends ConstantPool {
 	}
 
 	/**
+	 * Set the name.
+	 *
+	 * @param name the name.
+	 */
+	public void setName(String name) {
+		ConstantUtf8Info info = (ConstantUtf8Info) classInfo.constantPoolAt(nameIndex);
+		info.setString(name);
+	}
+
+	/**
 	 * Get the descriptor string.
 	 *
 	 * @return the string.
@@ -102,6 +112,16 @@ public class ConstantNameAndTypeInfo extends ConstantPool {
 	 */
 	public String descriptor() throws InvalidByteCodeException {
 		return classInfo.constantPoolEntryName(descriptorIndex);
+	}
+
+	/**
+	 * Set the descriptor.
+	 *
+	 * @param descriptor the descriptor.
+	 */
+	public void setDescriptor(String descriptor) {
+		ConstantUtf8Info info = (ConstantUtf8Info) classInfo.constantPoolAt(descriptorIndex);
+		info.setString(descriptor);
 	}
 
 	@Override

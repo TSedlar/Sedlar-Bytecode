@@ -6,13 +6,12 @@
  */
 package me.sedlar.bytecode.util;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import me.sedlar.bytecode.AbstractInstruction;
 import me.sedlar.bytecode.structure.MethodInfo;
 import me.sedlar.bytecode.util.filter.InstructionFilter;
+import me.sedlar.util.collection.MultiHashMap;
 import me.sedlar.util.collection.QueryableList;
 
 /**
@@ -20,7 +19,7 @@ import me.sedlar.util.collection.QueryableList;
  */
 public class QueryableInstructionList extends QueryableList<AbstractInstruction> {
 
-	protected final Map<String, AbstractInstruction> cache = new HashMap<>();
+    private final MultiHashMap<String, AbstractInstruction> cache = new MultiHashMap<>();
 	
 	@Override
 	public AbstractInstruction set(int index, AbstractInstruction ai) {
@@ -60,8 +59,10 @@ public class QueryableInstructionList extends QueryableList<AbstractInstruction>
             radius++;
             if (filters[index].validate(ai)) {
                 String label = filters[index].label();
-                if (label != null)
-                    list.cache.put(label, ai);
+                if (label != null) {
+                    filters[index].cache().add(label, ai);
+                    list.cache.add(label, ai);
+                }
                 index++;
                 list.add(ai);
                 radius = 0;
@@ -90,8 +91,28 @@ public class QueryableInstructionList extends QueryableList<AbstractInstruction>
 	 * @return the instruction with the given label.
 	 */
 	public AbstractInstruction get(String label) {
-		return cache.get(label);
+		return cache.first(label);
 	}
+
+    /**
+     * Gets the instructions with the given label.
+     *
+     * @param label
+     *            The label to search with.
+     * @return the instructions with the given label.
+     */
+    public List<AbstractInstruction> getAll(String label) {
+        return cache.get(label);
+    }
+
+    /**
+     * Gets the labeled instructions.
+     *
+     * @return the labeled instructions.
+     */
+    public MultiHashMap<String, AbstractInstruction> labeled() {
+        return cache;
+    }
 
 	/**
 	 * Prints out the instructions.
