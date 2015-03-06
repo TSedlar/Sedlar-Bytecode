@@ -12,10 +12,9 @@ import me.sedlar.bytecode.structure.MethodInfo;
 import me.sedlar.util.io.Streams;
 
 import java.io.*;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -66,38 +65,70 @@ public class JarArchive {
 		return nanos;
 	}
 
+    /**
+     * Adds bytes to either resources or classes.
+     *
+     * @param entryName a String that is the name of an entry to be added from the jar file
+     * @param inputStream an InputStream to be added to the HashMap with the entryName
+     */
+    private void addInfo(String entryName, InputStream inputStream) {
+        byte[] bytes = Streams.binary(inputStream);
+        ClassInfo classInfo;
+        try {
+            classInfo = new ClassInfo(bytes);
+        } catch (IOException|InvalidByteCodeException e) {
+            resources.put(entryName, bytes);
+            return;
+        }
+        classes.put(entryName, classInfo);
+
+    }
+
+    /**
+     * Get a map of every class within the given jar.
+     *
+     * @param parallel a boolean that decides if the classes and resources should be built in parallel
+     *
+     * @return a map of every class within the given jar
+     */
+    public Map<String, ClassInfo> build(boolean parallel) {
+        if (!classes.isEmpty())
+            return classes;
+        long start = System.nanoTime();
+        try (JarFile jar = new JarFile(file)) {
+            ConcurrentHashMap<String, InputStream> entries = new ConcurrentHashMap();
+            for (JarEntry entry : Collections.list(jar.entries())) {
+                String entryName = entry.getName();
+                if (entryName.endsWith(".class")) {
+                    entryName = entryName.replace(".class", "");
+                    classes.put(entryName, null);
+                } else if (keepResources) {
+                    resources.put(entryName, null);
+                }
+                entries.put(entryName, jar.getInputStream(entry));
+            }
+            entries.forEach((parallel ? 1 : Long.MAX_VALUE), (key, value) -> addInfo(key, value));
+            if (entries.size() != (classes.size() + resources.size())) {
+                classes.clear();
+                resources.clear();
+                return null;
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        long end = System.nanoTime();
+        nanos = (end - start);
+        return classes;
+    }
+
 	/**
 	 * Get a map of every class within the given jar.
 	 *
 	 * @return a map of every class within the given jar
 	 */
 	public Map<String, ClassInfo> build() {
-		if (!classes.isEmpty())
-			return classes;
-		long start = System.nanoTime();
-		try {
-			try (JarFile jar = new JarFile(file)) {
-				Enumeration<JarEntry> enumeration = jar.entries();
-				while (enumeration.hasMoreElements()) {
-					JarEntry entry = enumeration.nextElement();
-					String entryName = entry.getName();
-					InputStream stream = jar.getInputStream(entry);
-					if (entryName.endsWith(".class")) {
-						byte[] bytes = Streams.binary(stream);
-						classes.put(entryName.replace(".class", ""), new ClassInfo(bytes));
-					} else if (keepResources) {
-						byte[] bytes = Streams.binary(stream);
-						resources.put(entryName, bytes);
-					}
-				}
-			}
-		} catch (IOException | InvalidByteCodeException e) {
-			return null;
-		}
-		long end = System.nanoTime();
-		nanos = (end - start);
-		return classes;
-	}
+        return build(false);
+    }
 
 	/**
 	 * Gets the file-size of the given archive.
