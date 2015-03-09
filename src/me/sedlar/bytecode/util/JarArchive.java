@@ -77,7 +77,8 @@ public class JarArchive {
         try {
             classInfo = new ClassInfo(bytes);
         } catch (IOException|InvalidByteCodeException e) {
-            resources.put(entryName, bytes);
+            if (keepResources)
+                resources.put(entryName, bytes);
             return;
         }
         classes.put(entryName, classInfo);
